@@ -138,3 +138,52 @@ for name, start, end in failure_windows:
     percentage = 100 * flagged_count / count if count else 0
 
     print(f"{name}: {flagged_count} of {count} readings flagged ({percentage:.2f}%)")
+
+monthly_results = pd.DataFrame(
+    {
+        "month": test_timestamps.dt.to_period("M"),
+        "flagged": test_errors > threshold,
+    }
+)
+
+monthly_summary = monthly_results.groupby("month").agg(
+    readings=("flagged", "size"),
+    flagged_readings=("flagged", "sum"),
+)
+
+monthly_summary["flagged_percentage"] = (
+    monthly_summary["flagged_readings"] / monthly_summary["readings"] * 100
+)
+
+print("\nAlerts by month:")
+print(monthly_summary.round(2))
+
+continuous_sensors = [
+    "TP2",
+    "TP3",
+    "H1",
+    "DV_pressure",
+    "Reservoirs",
+    "Oil_temperature",
+    "Motor_current",
+]
+
+data["month"] = data["timestamp"].dt.to_period("M")
+
+print("\nMonthly average sensor values:")
+print(data.groupby("month")[continuous_sensors].mean().round(2))
+
+continuous_sensors = [
+    "TP2",
+    "TP3",
+    "H1",
+    "DV_pressure",
+    "Reservoirs",
+    "Oil_temperature",
+    "Motor_current",
+]
+
+data["month"] = data["timestamp"].dt.to_period("M")
+
+print("\nMonthly sensor variation (standard deviation):")
+print(data.groupby("month")[continuous_sensors].std().round(2))
